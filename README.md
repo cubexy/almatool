@@ -1,18 +1,33 @@
-# TOOL → faculty registry and AlmaWeb details
+# almatool
 
-Firefox 142+ extension in **`extension/`**. On TOOL booking pages, `Fakultät ↗` opens a popup at the faculty's WS2026 registry and expands the exact `10-` or `FMI-` module. `10-` rows also have `AlmaWeb ↗` for public AlmaWeb details. Grey/unavailable rows have the same available buttons. Firefox handles any faculty login in the popup using the normal profile session.
+Firefox 142+ extension for Uni Leipzig TOOL pages to add actual AlmaWeb links to modules so you can actually look at them.
 
-## Temporary installation and use
+<img width="774" height="244" alt="AlmaWeb buttons next to modules" src="https://github.com/user-attachments/assets/b904b17e-c2e8-4b3d-983b-3932b26f6a11" />
 
-1. Open `about:debugging#/runtime/this-firefox` in Firefox, click **Load Temporary Add-on…**, and choose `extension/manifest.json` (not the repository root). Grant access to TOOL, the faculty registry, and AlmaWeb if Firefox asks. If updating an already loaded temporary add-on, click **Reload** there and refresh TOOL. Version **1.1.3** uses a direct background lookup and explicitly requests AlmaWeb host access. If needed, enable that access under `about:addons` → this add-on → **Permissions**.
-2. Open a TOOL module booking page (`tool.uni-leipzig.de/einschreibung/bookings/…`). Click `Fakultät ↗` to expand the module in the faculty registry, or `AlmaWeb ↗` on a `10-` row for AlmaWeb's public module-details page. The AlmaWeb button displays **AlmaWeb sucht …** while a blank popup waits; each of the four AlmaWeb requests may take up to two minutes. It searches the public catalogue without browser cookies, verifies the exact module number, then navigates the popup directly to the details URL. On failure, the blank popup closes and TOOL displays the error. The faculty route continues to use normal browser authentication.
+## Disclaimer 🤖
 
-Temporary add-ons disappear when Firefox closes. This extension has no support claim for private windows or Firefox containers; test in the ordinary profile/session. This repository contains only extension source and this README; saved third-party pages are not distributed.
+Please note that this was fully coded using AI as a proof of concept. I do not recommend permanently using this add on and also will not publish this onto the Addons Store. It works for the designated use case though!
 
-## Checks
+## Running the extension
 
-Check JavaScript syntax with `for file in extension/*.js extension/adapters/*.js; do node --check "$file" || exit; done`. Run `npm exec --yes --package web-ext@10.7.0 -- web-ext lint --source-dir extension` for lint. Tests are development-only and not shipped; saved third-party pages are not in this repository. The resolver passed five temporary DOM/API-mock checks for exact matching, detail verification, popup navigation, errors, and independent requests. It also passed a live anonymous lookup for `10-202-2207` using curl transport: record `398603265372739`, verified detail heading. This does not establish Firefox runtime behavior: reload the add-on, refresh TOOL, click both buttons, confirm their correct destinations, test signed-out faculty login, and check two simultaneous popups.
+- Clone the repository.
 
-## Semester and faculty updates
+- Open `about:debugging#/runtime/this-firefox` in Firefox and click **Load Temporary Add-on…**.
 
-Change the faculty registry URL in `extension/adapters/mathcs.js` and its `content_scripts.matches` pattern in `extension/manifest.json` together each semester. Also update `catalogueName` in `extension/almaweb.js` for the public AlmaWeb search. AlmaWeb's detail URL contains an internal record ID that cannot be derived from the displayed module number: the extension searches by exact number, extracts the resulting record ID, and opens the details. The `AlmaWeb ↗` button is limited to `10-` because the checked `FMI-26W11` was not found in that public catalogue. To add a faculty, create another object with `id`, `matchesModule(number)`, `registryUrl`, and `openModule(number)`; add it to `extension/adapters/index.js`, load its file before `index.js` in all three script lists, and add its registry URL match/content-script entry in the manifest.
+- Select `extension/manifest.json`.
+
+If Firefox asks for access to TOOL, the faculty registry, or AlmaWeb, allow it. If AlmaWeb access is disabled, you can enable it under `about:addons` → this extension → **Permissions**.
+
+Temporary extensions are removed when Firefox closes.
+
+## Using the extension
+
+Open a TOOL module booking page and use the added faculty button to open the matching module in the faculty registry.
+
+The AlmaWeb button is shown for all available modules and opens the matching public AlmaWeb details page. The lookup can take a while because AlmaWeb is searched by module number first.
+
+The faculty registry uses your normal Firefox session, so you can log in there as usual if required.
+
+## Why is this so slow?
+
+This is unfortunately not a cause of bad AI slop code but rather of bad AlmaWeb code (thanks, Telekom!). Because AlmaWeb uses internal IDs for identifying modules, we cannot view a module by ID directly and instead have to use the AlmaWeb search to find it which is terrible. A fix for this would probably be building a full index of the available modules with IDs and AlmaWeb IDs which would speed up lookup a lot.
