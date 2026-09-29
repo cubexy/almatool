@@ -2,7 +2,7 @@
 
 Firefox 142+ extension for Uni Leipzig TOOL pages to add actual AlmaWeb links to modules so you can actually look at them.
 
-<img width="774" height="244" alt="AlmaWeb buttons next to modules" src="https://github.com/user-attachments/assets/b904b17e-c2e8-4b3d-983b-3932b26f6a11" />
+<img width="732" height="279" alt="grafik" src="https://github.com/user-attachments/assets/ee7ddad7-b327-4a45-8034-79c0f87857fc" />
 
 ## Disclaimer 🤖
 
