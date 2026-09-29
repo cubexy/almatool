@@ -40,8 +40,7 @@ async function almawebDocument(url, options = {}) {
 function findCatalogueOption(options, semester) {
   const exact = [...options].find(
     (option) =>
-      option.textContent.trim() ===
-      `Vorlesungsverzeichnis ${semester.label}`,
+      option.textContent.trim() === `Vorlesungsverzeichnis ${semester.label}`,
   );
   if (exact) return exact;
   // Tolerate abbreviated year forms (WiSe 2027-28, SoSe 27) instead of failing outright.

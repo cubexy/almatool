@@ -9,6 +9,18 @@
   cursor: pointer;
   font: inherit;
 }
-.almaweb-module-button:focus-visible { outline: 2px solid #123b66; outline-offset: 2px; }
-.almaweb-error { display: block; color: #a11919; }
-.almaweb-notice { padding: 10px; margin: 10px 0; border: 1px solid #9c6b1b; background: #fff5db; color: #382c17; }
+.almaweb-module-button:focus-visible {
+  outline: 2px solid #123b66;
+  outline-offset: 2px;
+}
+.almaweb-error {
+  display: block;
+  color: #a11919;
+}
+.almaweb-notice {
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #9c6b1b;
+  background: #fff5db;
+  color: #382c17;
+}
