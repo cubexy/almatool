@@ -27,7 +27,9 @@ function addModuleButtons() {
         button.disabled = true;
         cell.querySelector(".almaweb-error")?.remove();
         button.textContent =
-          destination === "almaweb" ? "AlmaWeb sucht …" : label;
+          destination === "almaweb"
+            ? "AlmaWeb sucht … (Bitte bis zu 30 Sekunden warten)"
+            : label;
         try {
           const result = await browser.runtime.sendMessage({
             type: "open-module",
@@ -46,7 +48,8 @@ function addModuleButtons() {
             message.setAttribute("role", "alert");
             cell.append(message);
           }
-          message.textContent = error.message || "Popup konnte nicht geöffnet werden.";
+          message.textContent =
+            error.message || "Popup konnte nicht geöffnet werden.";
         } finally {
           button.disabled = false;
           button.textContent = label;
