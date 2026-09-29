@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "TOOL AlmaWeb module links",
+  "version": "1.0.0",
+  "description": "Open TOOL modules in the faculty registry.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tool-almaweb-modules@local",
+      "strict_min_version": "115.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  },
+  "permissions": ["storage"],
+  "background": {
+    "scripts": ["adapters/mathcs.js", "adapters/index.js", "background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://tool.uni-leipzig.de/einschreibung/bookings/*"],
+      "js": ["adapters/mathcs.js", "adapters/index.js", "tool.js"],
+      "css": ["styles.css"]
+    },
+    {
+      "matches": ["https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/ws2026/modul.html"],
+      "js": ["adapters/mathcs.js", "adapters/index.js", "registry.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}

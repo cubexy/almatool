@@ -1,0 +1,14 @@
+.almaweb-module-button {
+  display: inline-block;
+  margin: 2px 0 2px 8px;
+  padding: 2px 6px;
+  color: #123b66;
+  background: #fff;
+  border: 1px solid #456b90;
+  border-radius: 3px;
+  cursor: pointer;
+  font: inherit;
+}
+.almaweb-module-button:focus-visible { outline: 2px solid #123b66; outline-offset: 2px; }
+.almaweb-error { display: block; color: #a11919; }
+.almaweb-notice { padding: 10px; margin: 10px 0; border: 1px solid #9c6b1b; background: #fff5db; color: #382c17; }
