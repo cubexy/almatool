@@ -6,7 +6,7 @@ Firefox 142+ extension for Uni Leipzig TOOL pages to add actual AlmaWeb links to
 
 ## Disclaimer 🤖
 
-Please note that this was fully coded using AI as a proof of concept. I do not recommend permanently using this add on and also will not publish this onto the Addons Store. It works for the designated use case though!
+Please note that this was fully coded using AI as a proof of concept. I do not recommend **permanently** using this add on and also will not publish this onto the Addons Store. It works for the designated use case though!
 
 ## Running the extension
 
