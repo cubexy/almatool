@@ -1,4 +1,4 @@
-/* global adapterFor, facultyAdapters, almawebOrigin */
+/* global adapterFor, facultyAdapters, almawebOrigin, warmAlmawebSearch */
 const requestKey = (tabId) => `pending-module-${tabId}`;
 const requestTypes = new Set([
   "get-module-request",
@@ -10,6 +10,11 @@ browser.tabs.onRemoved.addListener((tabId) => {
 });
 
 browser.runtime.onMessage.addListener(async (message, sender) => {
+  if (message?.type === "warm-almaweb") {
+    warmAlmawebSearch();
+    return null;
+  }
+
   if (message?.type === "open-module") {
     if (
       !sender.tab ||

@@ -59,3 +59,4 @@ function addModuleButtons() {
 }
 
 addModuleButtons();
+browser.runtime.sendMessage({ type: "warm-almaweb" });

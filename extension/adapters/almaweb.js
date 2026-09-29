@@ -1,8 +1,7 @@
 // Background-only public catalogue lookup. No injected AlmaWeb script or login is needed.
 const almawebOrigin = "https://almaweb.uni-leipzig.de";
 
-// Only the search POST does real work, so the requests around it are cached. The
-// search token expires, hence the short form TTL. Bump to invalidate all entries.
+// Bump to invalidate all entries.
 const cacheVersion = "almaweb-cache-v1";
 const searchLinkTtl = 24 * 60 * 60 * 1000;
 const searchFormTtl = 30 * 60 * 1000;
@@ -109,7 +108,6 @@ async function resolveSearchLink() {
   return href;
 }
 
-// `fromCache` marks a possibly expired token, so the caller can retry.
 async function resolveSearchForm(catalogueName) {
   const cached = await cacheStore.get(`search-form:${catalogueName}`);
   if (cached) return { ...cached, fromCache: true };
@@ -172,7 +170,7 @@ async function resolveAlmawebModule(number) {
   if (known) return known;
 
   // An expired token returns a 200 with an empty form, indistinguishable from a
-  // module with no results. Retry once with a fresh form before reporting that.
+  // module with no results, so retry once before reporting it as missing.
   let form = await resolveSearchForm(catalogueName);
   let records = await searchModule(number, form);
   if (!records.size && form.fromCache) {
@@ -194,6 +192,12 @@ async function resolveAlmawebModule(number) {
   });
   await cacheStore.set(moduleKey, details.href, moduleUrlTtl);
   return details.href;
+}
+
+async function warmAlmawebSearch() {
+  try {
+    await resolveSearchForm(currentSemester().label);
+  } catch {}
 }
 
 const almawebAdapter = {
