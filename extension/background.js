@@ -1,5 +1,9 @@
-/* global adapterFor, facultyAdapters */
+/* global adapterFor, facultyAdapters, almawebOrigin */
 const requestKey = (tabId) => `pending-module-${tabId}`;
+const requestTypes = new Set([
+  "get-module-request",
+  "finish-module-request",
+]);
 
 browser.tabs.onRemoved.addListener((tabId) => {
   browser.storage.session.remove(requestKey(tabId)).catch(console.error);
@@ -32,7 +36,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
       try {
         if (
           !(await browser.permissions.contains({
-            origins: ["https://almaweb.uni-leipzig.de/*"],
+            origins: [`${almawebOrigin}/*`],
           }))
         ) {
           return {
@@ -48,6 +52,20 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
         };
       }
     }
+    let url;
+    if (destination === "almaweb") {
+      try {
+        url = await adapter.openModule(message.number);
+      } catch (error) {
+        console.error("AlmaWeb: Modulsuche fehlgeschlagen", error);
+        return {
+          ok: false,
+          error: `AlmaWeb: ${error.message || "Modulsuche fehlgeschlagen."}`,
+        };
+      }
+    } else {
+      url = adapter.registryUrl;
+    }
     let tabId;
     let windowId;
     try {
@@ -61,14 +79,11 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
       tabId = popup.tabs?.[0]?.id;
       if (!Number.isInteger(tabId))
         throw new Error("Popup-Tab nicht verfügbar.");
-      if (destination === "almaweb") {
-        const url = await adapter.openModule(message.number);
-        await browser.tabs.update(tabId, { url });
-      } else {
-        const request = { adapterId: adapter.id, number: message.number };
-        await browser.storage.session.set({ [requestKey(tabId)]: request });
-        await browser.tabs.update(tabId, { url: adapter.registryUrl });
-      }
+      if (destination === "faculty")
+        await browser.storage.session.set({
+          [requestKey(tabId)]: { adapterId: adapter.id, number: message.number },
+        });
+      await browser.tabs.update(tabId, { url });
       return { ok: true };
     } catch (error) {
       if (tabId !== undefined)
@@ -78,22 +93,15 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
       if (windowId !== undefined)
         await browser.windows.remove(windowId).catch(console.error);
       console.error("Modul-Popup fehlgeschlagen", error);
-      return {
-        ok: false,
-        error:
-          destination === "almaweb"
-            ? `AlmaWeb: ${error.message || "Modulsuche fehlgeschlagen."}`
-            : "Popup konnte nicht geöffnet werden.",
-      };
+      return { ok: false, error: "Popup konnte nicht geöffnet werden." };
     }
   }
 
-  if (["get-module-request", "finish-module-request"].includes(message?.type)) {
+  if (requestTypes.has(message?.type)) {
     const tabId = sender.tab?.id;
     if (!Number.isInteger(tabId)) return null;
-    const request = (await browser.storage.session.get(requestKey(tabId)))[
-      requestKey(tabId)
-    ];
+    const key = requestKey(tabId);
+    const request = (await browser.storage.session.get(key))[key];
     const adapter = facultyAdapters.find(
       (item) => item.id === request?.adapterId,
     );
@@ -102,7 +110,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
       return null;
     if (message.type === "finish-module-request") {
       if (message.number !== request.number) return null;
-      await browser.storage.session.remove(requestKey(tabId));
+      await browser.storage.session.remove(key);
     }
     return request;
   }

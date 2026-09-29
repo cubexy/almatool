@@ -18,9 +18,9 @@
         result.status === "missing"
           ? `Modul ${request.number} wurde in diesem Verzeichnis nicht gefunden.`
           : `Modul ${request.number} konnte nicht geöffnet werden.`;
-      (
-        document.querySelector("#accordion_unit_MODUL_N") || document.body
-      ).before(notice);
+      const host = document.querySelector("#accordion_unit_MODUL_N");
+      if (host) host.before(notice);
+      else document.body.prepend(notice);
     }
     await browser.runtime.sendMessage({
       type: "finish-module-request",

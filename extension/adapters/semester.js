@@ -1,6 +1,7 @@
 // Lecture starts: Jul–Dec belongs to the winter semester starting that year,
 // Jan–Jun to the summer semester starting that year.
-function currentSemester(now = new Date()) {
+function currentSemester() {
+  const now = new Date();
   const start = now.getFullYear();
   const winter = now.getMonth() >= 6;
   const end = winter ? start + 1 : null;

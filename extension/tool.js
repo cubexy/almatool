@@ -46,7 +46,7 @@ function addModuleButtons() {
             message.setAttribute("role", "alert");
             cell.append(message);
           }
-          message.textContent = ` ${error.message || "Popup konnte nicht geöffnet werden."}`;
+          message.textContent = error.message || "Popup konnte nicht geöffnet werden.";
         } finally {
           button.disabled = false;
           button.textContent = label;

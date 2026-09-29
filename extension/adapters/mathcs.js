@@ -80,8 +80,10 @@ const mathcsAdapter = {
         (height, node) => Math.max(height, node.getBoundingClientRect().bottom),
         0,
       );
-    heading.style.scrollMarginTop = `${Math.max(0, fixedHeader) + 12}px`;
+    const previousScrollMargin = heading.style.scrollMarginTop;
+    heading.style.scrollMarginTop = `${fixedHeader + 12}px`;
     heading.scrollIntoView({ block: "start" });
+    heading.style.scrollMarginTop = previousScrollMargin;
     return { status: "opened" };
   },
 };

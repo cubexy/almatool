@@ -19,12 +19,12 @@ async function almawebDocument(url, options = {}) {
     });
     if (!response.ok)
       throw new Error(`AlmaWeb antwortet mit HTTP ${response.status}.`);
-    publicAlmawebUrl(response.url, url);
+    const finalUrl = publicAlmawebUrl(response.url || url, url);
     const document = new DOMParser().parseFromString(
       await response.text(),
       "text/html",
     );
-    return { document, url: response.url || url };
+    return { document, url: finalUrl };
   } catch (error) {
     if (error.name === "AbortError")
       throw new Error(
@@ -50,7 +50,7 @@ function findCatalogueOption(options, semester) {
     value === expected || value === expected.slice(-2);
   return [...options].find((option) => {
     const match =
-      /^Vorlesungsverzeichnis\s+(\S+)\s+(\d{2,4})(?:\s*[/|-]\s*(\d{2,4}))?$/.exec(
+      /^Vorlesungsverzeichnis\s+(\S+)\s+(\d{2,4})(?:\s*[/–-]\s*(\d{2,4}))?$/.exec(
         option.textContent.trim(),
       );
     if (!match || match[1] !== semester.abbreviation) return false;
@@ -124,7 +124,7 @@ async function resolveAlmawebModule(number) {
   details.search = new URLSearchParams({
     APPNAME: "CampusNet",
     PRGNAME: "MODULEDETAILS",
-    ARGUMENTS: `-N000000000000001,-N000407,-N${[...records][0]},-A`,
+    ARGUMENTS: `-N000000000000001,-N000407,-N${records.values().next().value},-A`,
   });
   const verified = await almawebDocument(details.href);
   if (

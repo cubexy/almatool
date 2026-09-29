@@ -1,8 +1,9 @@
 /* global mathcsAdapter, almawebAdapter */
 const facultyAdapters = [mathcsAdapter];
-const adapters = { faculty: facultyAdapters[0], almaweb: almawebAdapter };
+const almawebAdapters = [almawebAdapter];
 
 function adapterFor(destination, number) {
-  const adapter = adapters[destination];
-  return adapter?.matchesModule(number) ? adapter : null;
+  const candidates =
+    destination === "almaweb" ? almawebAdapters : facultyAdapters;
+  return candidates.find((adapter) => adapter.matchesModule(number)) || null;
 }
