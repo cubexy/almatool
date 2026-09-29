@@ -5,11 +5,12 @@ function addModuleButtons() {
     if (!cell) return;
     const original = cell.querySelector("label, span");
     const number = original?.textContent.trim();
-    if (!number || !adapterFor(number)) return;
+    if (!number) return;
     for (const [destination, label] of [
       ["faculty", "Fakultät ↗"],
       ["almaweb", "AlmaWeb ↗"],
     ]) {
+      if (!adapterFor(destination, number)) continue;
       if (
         cell.querySelector(
           `.almaweb-module-button[data-destination="${destination}"]`,

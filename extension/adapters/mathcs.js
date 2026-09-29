@@ -1,8 +1,13 @@
+/* global currentSemester */
 const mathcsAdapter = {
   id: "mathcs",
   matchesModule: number => /^(10-|FMI-)/.test(number),
-  // Update this URL and the registry match in manifest.json together each semester.
-  registryUrl: "https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/ws2026/modul.html#MODUL_N",
+  // Module numbers are not semester-scoped; only the registry path is, and that
+  // is derived from the current semester (ws2026, ss2027, ...).
+  get registryUrl() {
+    const { pathSegment } = currentSemester();
+    return `https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/${pathSegment}/modul.html#MODUL_N`;
+  },
 
   async openModule(number) {
     const section = document.querySelector("#accordion_unit_MODUL_N");

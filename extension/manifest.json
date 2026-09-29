@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TOOL AlmaWeb module links",
-  "version": "1.1.3",
+  "version": "1.4.0",
   "description": "Open TOOL modules in the faculty registry or public AlmaWeb details.",
   "browser_specific_settings": {
     "gecko": {
@@ -13,17 +13,37 @@
   "permissions": ["storage"],
   "host_permissions": ["https://almaweb.uni-leipzig.de/*"],
   "background": {
-    "scripts": ["adapters/mathcs.js", "adapters/index.js", "almaweb.js", "background.js"]
+    "scripts": [
+      "adapters/semester.js",
+      "adapters/mathcs.js",
+      "adapters/almaweb.js",
+      "adapters/index.js",
+      "background.js"
+    ]
   },
   "content_scripts": [
     {
       "matches": ["https://tool.uni-leipzig.de/einschreibung/bookings/*"],
-      "js": ["adapters/mathcs.js", "adapters/index.js", "tool.js"],
+      "js": [
+        "adapters/semester.js",
+        "adapters/mathcs.js",
+        "adapters/almaweb.js",
+        "adapters/index.js",
+        "tool.js"
+      ],
       "css": ["styles.css"]
     },
     {
-      "matches": ["https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/ws2026/modul.html"],
-      "js": ["adapters/mathcs.js", "adapters/index.js", "registry.js"],
+      "matches": [
+        "https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/*/modul.html"
+      ],
+      "js": [
+        "adapters/semester.js",
+        "adapters/mathcs.js",
+        "adapters/almaweb.js",
+        "adapters/index.js",
+        "registry.js"
+      ],
       "css": ["styles.css"]
     }
   ]
