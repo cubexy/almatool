@@ -27,9 +27,7 @@ function addModuleButtons() {
         button.disabled = true;
         cell.querySelector(".almaweb-error")?.remove();
         button.textContent =
-          destination === "almaweb"
-            ? "AlmaWeb sucht … (Bitte bis zu 30 Sekunden warten)"
-            : label;
+          destination === "almaweb" ? "AlmaWeb sucht …" : label;
         try {
           const result = await browser.runtime.sendMessage({
             type: "open-module",

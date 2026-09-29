@@ -24,10 +24,12 @@ Temporary extensions are removed when Firefox closes.
 
 Open a TOOL module booking page and use the added faculty button to open the matching module in the faculty registry.
 
-The AlmaWeb button is shown for all available modules and opens the matching public AlmaWeb details page. The lookup can take a while because AlmaWeb is searched by module number first.
+The AlmaWeb button is shown for all available modules and opens the matching public AlmaWeb details page. The lookup can take a while because AlmaWeb is searched by module number first. Repeat lookups are cached, so a module you already opened once opens instantly.
 
 The faculty registry uses your normal Firefox session, so you can log in there as usual if required.
 
-## Why is this so slow?
+## Why is this still slow?
 
-This is unfortunately not a cause of bad AI slop code but rather of bad AlmaWeb code (thanks, Telekom!). Because AlmaWeb uses internal IDs for identifying modules, we cannot view a module by ID directly and instead have to use the AlmaWeb search to find it which is terrible. A fix for this would probably be building a full index of the available modules with IDs and AlmaWeb IDs which would speed up lookup a lot.
+AlmaWeb identifies modules by internal IDs, so a module cannot be opened directly and has to be found through the AlmaWeb search. That search request is the slow part and is always needed. The requests around it — the catalogue page, the search form, and the resolved link — are cached, so a first lookup costs three requests and a module you already looked up costs none.
+
+Skipping that last request would need a full index of available modules mapped to their AlmaWeb record IDs, which is not implemented.

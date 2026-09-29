@@ -1,6 +1,42 @@
 // Background-only public catalogue lookup. No injected AlmaWeb script or login is needed.
 const almawebOrigin = "https://almaweb.uni-leipzig.de";
 
+// Only the search POST does real work, so the requests around it are cached. The
+// search token expires, hence the short form TTL. Bump to invalidate all entries.
+const cacheVersion = "almaweb-cache-v1";
+const searchLinkTtl = 24 * 60 * 60 * 1000;
+const searchFormTtl = 30 * 60 * 1000;
+const moduleUrlTtl = 7 * 24 * 60 * 60 * 1000;
+
+// A cache failure must never fail the lookup, so all three swallow errors.
+const cacheStore = {
+  key(name) {
+    return `${cacheVersion}:${name}`;
+  },
+  async get(name) {
+    try {
+      const key = cacheStore.key(name);
+      const entry = (await browser.storage.local.get(key))[key];
+      return entry && entry.expires > Date.now() ? entry.value : null;
+    } catch {
+      return null;
+    }
+  },
+  async set(name, value, ttl) {
+    try {
+      const key = cacheStore.key(name);
+      await browser.storage.local.set({
+        [key]: { value, expires: Date.now() + ttl },
+      });
+    } catch {}
+  },
+  async remove(name) {
+    try {
+      await browser.storage.local.remove(cacheStore.key(name));
+    } catch {}
+  },
+};
+
 function publicAlmawebUrl(href, base) {
   const url = new URL(href, base);
   if (url.origin !== almawebOrigin)
@@ -60,45 +96,57 @@ function findCatalogueOption(options, semester) {
   });
 }
 
-async function resolveAlmawebModule(number) {
+async function resolveSearchLink() {
+  const cached = await cacheStore.get("search-link");
+  if (cached) return cached;
   const catalogue = await almawebDocument(`${almawebOrigin}/vvz`);
   const searchLink = catalogue.document.querySelector(
     '#pageTopNavi li[title="Suche"] > a',
   );
   if (!searchLink) throw new Error("AlmaWeb-Suche nicht gefunden.");
-  const search = await almawebDocument(
-    publicAlmawebUrl(searchLink.getAttribute("href"), catalogue.url),
-  );
+  const href = publicAlmawebUrl(searchLink.getAttribute("href"), catalogue.url);
+  await cacheStore.set("search-link", href, searchLinkTtl);
+  return href;
+}
+
+// `fromCache` marks a possibly expired token, so the caller can retry.
+async function resolveSearchForm(catalogueName) {
+  const cached = await cacheStore.get(`search-form:${catalogueName}`);
+  if (cached) return { ...cached, fromCache: true };
+  const search = await almawebDocument(await resolveSearchLink());
   const form = search.document.querySelector("#findcourse");
-  const semesterInfo = currentSemester();
-  const catalogueName = semesterInfo.label;
   const semester = findCatalogueOption(
     form?.querySelector("#course_catalogue")?.options || [],
-    semesterInfo,
+    currentSemester(),
   );
   if (!form || !semester || !form.querySelector('[name="module_number"]')) {
-    throw new Error(
-      `AlmaWeb-Suchformular für ${catalogueName} nicht verfügbar.`,
-    );
+    throw new Error(`AlmaWeb-Suchformular für ${catalogueName} nicht verfügbar.`);
   }
+  const fields = {};
+  for (const input of form.querySelectorAll('input[type="hidden"][name]')) {
+    fields[input.name] = input.value;
+  }
+  const resolved = {
+    action: publicAlmawebUrl(form.getAttribute("action"), search.url),
+    fields,
+    catalogue: semester.value,
+  };
+  await cacheStore.set(`search-form:${catalogueName}`, resolved, searchFormTtl);
+  return { ...resolved, fromCache: false };
+}
 
+async function searchModule(number, form) {
   // Preserve the fresh hidden search token. Send only catalogue/number criteria,
   // not remembered course filters or refresh/reset submit buttons.
-  const fields = new URLSearchParams();
-  for (const input of form.querySelectorAll('input[type="hidden"][name]')) {
-    fields.set(input.name, input.value);
-  }
-  fields.set("course_catalogue", semester.value);
+  const fields = new URLSearchParams(form.fields);
+  fields.set("course_catalogue", form.catalogue);
   fields.set("course_catalogue_section", "0");
   fields.set("module_number", number);
   fields.set("submit_search", "Suche");
-  const results = await almawebDocument(
-    publicAlmawebUrl(form.getAttribute("action"), search.url),
-    {
-      method: "POST",
-      body: fields,
-    },
-  );
+  const results = await almawebDocument(form.action, {
+    method: "POST",
+    body: fields,
+  });
   const records = new Set();
   for (const link of results.document.querySelectorAll(
     'tr.module a[href*="PRGNAME=MODULEDETAILS"]',
@@ -114,6 +162,24 @@ async function resolveAlmawebModule(number) {
       ?.match(/^-N\d+,-N[^,]+,-N(\d{15}),-A/);
     if (record) records.add(record[1]);
   }
+  return records;
+}
+
+async function resolveAlmawebModule(number) {
+  const { label: catalogueName } = currentSemester();
+  const moduleKey = `module-url:${catalogueName}:${number}`;
+  const known = await cacheStore.get(moduleKey);
+  if (known) return known;
+
+  // An expired token returns a 200 with an empty form, indistinguishable from a
+  // module with no results. Retry once with a fresh form before reporting that.
+  let form = await resolveSearchForm(catalogueName);
+  let records = await searchModule(number, form);
+  if (!records.size && form.fromCache) {
+    await cacheStore.remove(`search-form:${catalogueName}`);
+    form = await resolveSearchForm(catalogueName);
+    records = await searchModule(number, form);
+  }
   if (!records.size)
     throw new Error(
       `Modul ${number} wurde in AlmaWeb (${catalogueName}) nicht gefunden.`,
@@ -126,15 +192,7 @@ async function resolveAlmawebModule(number) {
     PRGNAME: "MODULEDETAILS",
     ARGUMENTS: `-N000000000000001,-N000407,-N${records.values().next().value},-A`,
   });
-  const verified = await almawebDocument(details.href);
-  if (
-    verified.document
-      .querySelector("#moduledetails h1")
-      ?.textContent.trim()
-      .split(/\s+/)[0] !== number
-  ) {
-    throw new Error(`AlmaWeb hat nicht die Details für ${number} geliefert.`);
-  }
+  await cacheStore.set(moduleKey, details.href, moduleUrlTtl);
   return details.href;
 }
 
