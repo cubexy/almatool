@@ -1,18 +1,19 @@
 {
   "manifest_version": 3,
   "name": "TOOL AlmaWeb module links",
-  "version": "1.0.0",
-  "description": "Open TOOL modules in the faculty registry.",
+  "version": "1.1.3",
+  "description": "Open TOOL modules in the faculty registry or public AlmaWeb details.",
   "browser_specific_settings": {
     "gecko": {
       "id": "tool-almaweb-modules@local",
-      "strict_min_version": "115.0",
+      "strict_min_version": "142.0",
       "data_collection_permissions": { "required": ["none"] }
     }
   },
   "permissions": ["storage"],
+  "host_permissions": ["https://almaweb.uni-leipzig.de/*"],
   "background": {
-    "scripts": ["adapters/mathcs.js", "adapters/index.js", "background.js"]
+    "scripts": ["adapters/mathcs.js", "adapters/index.js", "almaweb.js", "background.js"]
   },
   "content_scripts": [
     {
